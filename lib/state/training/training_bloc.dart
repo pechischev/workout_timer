@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:my_train_clock/state/settings/settings.dart';
-import 'package:stop_watch_timer/stop_watch_timer.dart';
+
+import 'timer.dart';
 
 part 'training_bloc.freezed.dart';
 
@@ -33,6 +34,7 @@ enum TrainingType {
   doing('Work');
 
   const TrainingType(this.name);
+
   final String name;
 }
 
@@ -62,7 +64,7 @@ class TrainingState with _$TrainingState {
 }
 
 class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
-  late final StopWatchTimer _timer;
+  late final WatchTimer _timer;
 
   final SettingsData settings;
 
@@ -74,14 +76,13 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
     on<_RestEvent>((_, emit) => _rest(emit));
     on<_WorkEvent>((_, emit) => _work(emit));
 
-    _timer = StopWatchTimer(
-      mode: StopWatchMode.countDown,
-      onChange: (value) {
-        final shouldChangeState = value == 0 &&
-            state.maybeWhen(
-              running: (_, __, ___) => true,
-              orElse: () => false,
-            );
+    _timer = WatchTimer(
+      time: settings.timeWork,
+      onStop: () {
+        final shouldChangeState = state.maybeWhen(
+          running: (_, __, ___) => true,
+          orElse: () => false,
+        );
         if (shouldChangeState) {
           state.whenOrNull(
             running: (_, __, type) {
@@ -96,26 +97,33 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
     );
   }
 
-  Stream<int> get time => _timer.secondTime;
+  Stream<Duration> get time => _timer.time;
 
   void _start(Emitter<TrainingState> emitter) {
-    add(const TrainingEvent.work());
+    emitter(TrainingState.running(
+      currentSet: 1,
+      currentRound: 1,
+      type: TrainingType.doing,
+    ));
+    _timer.setTime(settings.timeWork);
+    _timer.start();
   }
 
   void _finish(Emitter<TrainingState> emitter) {
-    _timer.onResetTimer();
     emitter(const TrainingState.finished());
+    _timer.stop();
+    _timer.setTime(settings.timeWork);
   }
 
   void _pause(Emitter<TrainingState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        _timer.onStopTimer();
         emitter(TrainingState.paused(
           currentSet: currentSet,
           currentRound: currentRound,
           type: type,
         ));
+        _timer.pause();
       },
       orElse: () {},
     );
@@ -124,12 +132,12 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
   void _continue(Emitter<TrainingState> emitter) {
     state.maybeWhen(
       paused: (currentSet, currentRound, type) {
-        _timer.onStartTimer();
         emitter(TrainingState.running(
           currentSet: currentSet,
           currentRound: currentRound,
           type: type,
         ));
+        _timer.start();
       },
       orElse: () {},
     );
@@ -138,10 +146,6 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
   void _rest(Emitter<TrainingState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        _timer.onResetTimer();
-        _timer.setPresetTime(mSec: settings.timeRest.inMilliseconds, add: false);
-        _timer.onStartTimer();
-
         final isLastRound = currentRound == settings.countRounds;
         final isLastSet = currentSet == settings.countSets;
         final isFinishTraining = isLastRound && isLastSet;
@@ -156,6 +160,9 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
           currentRound: currentRound,
           type: TrainingType.resting,
         ));
+
+        _timer.setTime(settings.timeRest);
+        _timer.restart();
       },
       orElse: () {},
     );
@@ -164,10 +171,6 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
   void _work(Emitter<TrainingState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        _timer.onResetTimer();
-        _timer.setPresetTime(mSec: settings.timeWork.inMilliseconds, add: false);
-        _timer.onStartTimer();
-
         final isLastSet = currentSet == settings.countSets;
 
         final set = isLastSet ? 1 : ++currentSet;
@@ -178,6 +181,8 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
           currentRound: round,
           type: TrainingType.doing,
         ));
+        _timer.setTime(settings.timeWork);
+        _timer.restart();
       },
       orElse: () {},
     );

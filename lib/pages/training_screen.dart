@@ -62,12 +62,11 @@ class _TrainingScreenContent extends StatelessWidget {
                   const SizedBox(height: 32),
                   StreamBuilder(
                     stream: context.read<TrainingBloc>().time,
-                    initialData: 0,
                     builder: (context, snap) {
-                      final value = snap.data ?? 0;
+                      final value = snap.data ?? const Duration();
 
                       return Text(
-                        value.toString(),
+                        value.inSeconds.toString(),
                         style: const TextStyle(
                           fontSize: 48,
                         ),
