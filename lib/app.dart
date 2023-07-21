@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_train_clock/pages/welcome_screen.dart';
 
 import 'state/state.dart';
-import 'pages/training_screen.dart';
+import 'pages/workout_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -22,9 +23,14 @@ class _App extends StatelessWidget {
     return MaterialApp(
       title: 'Workout Timer',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primaryColor: Colors.blue,
+        useMaterial3: true,
       ),
-      home: const TrainingScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const WelcomeScreen(),
+        '/workout': (context) => const WorkoutScreen(),
+      },
     );
   }
 }

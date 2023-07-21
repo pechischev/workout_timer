@@ -3,35 +3,36 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_train_clock/state/state.dart';
 import 'package:my_train_clock/ui/widgets.dart';
 
-class TrainingScreen extends StatelessWidget {
-  const TrainingScreen({super.key});
+class WorkoutScreen extends StatelessWidget {
+  const WorkoutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) =>
-          TrainingBloc(context.read<SettingsBloc>().state),
-      child: _TrainingScreenContent(),
+          WorkoutBloc(context.read<SettingsBloc>().state),
+      child: _Content(),
     );
   }
 }
 
-class _TrainingScreenContent extends StatelessWidget {
+class _Content extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Layout(
+      appbar: const CustomNavigationBar(),
       body: Center(
         child: Column(
           children: [
             const SizedBox(height: 20),
-            BlocBuilder<TrainingBloc, TrainingState>(
+            BlocBuilder<WorkoutBloc, WorkoutState>(
               builder: (context, state) {
                 return state.maybeMap(
-                  running: (value) => _TrainingInformationWidget(
+                  running: (value) => _WorkoutInformationWidget(
                     set: value.currentSet,
                     round: value.currentRound,
                   ),
-                  paused: (value) => _TrainingInformationWidget(
+                  paused: (value) => _WorkoutInformationWidget(
                     set: value.currentSet,
                     round: value.currentRound,
                   ),
@@ -43,7 +44,7 @@ class _TrainingScreenContent extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  BlocBuilder<TrainingBloc, TrainingState>(
+                  BlocBuilder<WorkoutBloc, WorkoutState>(
                     builder: (context, state) {
                       final label = state.maybeMap(
                         running: (value) => value.type.name,
@@ -60,7 +61,7 @@ class _TrainingScreenContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   StreamBuilder(
-                    stream: context.read<TrainingBloc>().time,
+                    stream: context.read<WorkoutBloc>().time,
                     builder: (context, snap) {
                       final value = snap.data ?? const Duration();
 
@@ -73,22 +74,22 @@ class _TrainingScreenContent extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                  BlocBuilder<TrainingBloc, TrainingState>(
+                  BlocBuilder<WorkoutBloc, WorkoutState>(
                     builder: (context, state) {
-                      final bloc = context.read<TrainingBloc>();
+                      final bloc = context.read<WorkoutBloc>();
 
                       return state.maybeMap(
                         running: (_) => _TimerButton(
                           icon: Icons.pause,
-                          onTap: () => bloc.add(const TrainingEvent.pause()),
+                          onTap: () => bloc.add(const WorkoutEvent.pause()),
                         ),
                         paused: (_) => _TimerButton(
                           icon: Icons.play_arrow,
-                          onTap: () => bloc.add(const TrainingEvent.proceed()),
+                          onTap: () => bloc.add(const WorkoutEvent.proceed()),
                         ),
                         orElse: () => _TimerButton(
                           icon: Icons.play_arrow,
-                          onTap: () => bloc.add(const TrainingEvent.start()),
+                          onTap: () => bloc.add(const WorkoutEvent.start()),
                         ),
                       );
                     },
@@ -103,11 +104,11 @@ class _TrainingScreenContent extends StatelessWidget {
   }
 }
 
-class _TrainingInformationWidget extends StatelessWidget {
+class _WorkoutInformationWidget extends StatelessWidget {
   final int set;
   final int round;
 
-  const _TrainingInformationWidget({required this.set, required this.round});
+  const _WorkoutInformationWidget({required this.set, required this.round});
 
   @override
   Widget build(BuildContext context) {

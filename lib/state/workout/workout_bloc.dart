@@ -4,71 +4,71 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:my_train_clock/state/state.dart';
 import 'package:my_train_clock/helpers/timer.dart';
 
-part 'training_bloc.freezed.dart';
+part 'workout_bloc.freezed.dart';
 
 @freezed
-class TrainingEvent with _$TrainingEvent {
-  const TrainingEvent._();
+class WorkoutEvent with _$WorkoutEvent {
+  const WorkoutEvent._();
 
   @literal
-  const factory TrainingEvent.start() = _StartEvent;
+  const factory WorkoutEvent.start() = _StartEvent;
 
   @literal
-  const factory TrainingEvent.pause() = _PauseEvent;
+  const factory WorkoutEvent.pause() = _PauseEvent;
 
   @literal
-  const factory TrainingEvent.finish() = _FinishEvent;
+  const factory WorkoutEvent.finish() = _FinishEvent;
 
   @literal
-  const factory TrainingEvent.rest() = _RestEvent;
+  const factory WorkoutEvent.rest() = _RestEvent;
 
   @literal
-  const factory TrainingEvent.work() = _WorkEvent;
+  const factory WorkoutEvent.work() = _WorkEvent;
 
   @literal
-  const factory TrainingEvent.proceed() = _ProceedEvent;
+  const factory WorkoutEvent.proceed() = _ProceedEvent;
 }
 
-enum TrainingType {
+enum WorkoutType {
   resting('Rest'),
   doing('Work');
 
-  const TrainingType(this.name);
+  const WorkoutType(this.name);
 
   final String name;
 }
 
 @freezed
-class TrainingState with _$TrainingState {
-  const TrainingState._();
+class WorkoutState with _$WorkoutState {
+  const WorkoutState._();
 
-  const factory TrainingState.beginning() = _BeginningState;
+  const factory WorkoutState.beginning() = _BeginningState;
 
   @Assert('currentSet > 0')
   @Assert('currentRound > 0')
-  factory TrainingState.running({
+  factory WorkoutState.running({
     required int currentSet,
     required int currentRound,
-    @Default(TrainingType.doing) TrainingType type,
+    @Default(WorkoutType.doing) WorkoutType type,
   }) = _RunningState;
 
   @Assert('currentSet > 0')
   @Assert('currentRound > 0')
-  factory TrainingState.paused({
+  factory WorkoutState.paused({
     required int currentSet,
     required int currentRound,
-    required TrainingType type,
+    required WorkoutType type,
   }) = _PausedState;
 
-  const factory TrainingState.finished() = _FinishedState;
+  const factory WorkoutState.finished() = _FinishedState;
 }
 
-class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
+class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   late final WatchTimer _timer;
 
   final SettingsData settings;
 
-  TrainingBloc(this.settings) : super(const TrainingState.beginning()) {
+  WorkoutBloc(this.settings) : super(const WorkoutState.beginning()) {
     on<_StartEvent>((_, emit) => _start(emit));
     on<_PauseEvent>((_, emit) => _pause(emit));
     on<_ProceedEvent>((_, emit) => _continue(emit));
@@ -86,9 +86,9 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
         if (shouldChangeState) {
           state.whenOrNull(
             running: (_, __, type) {
-              final action = type == TrainingType.doing
-                  ? TrainingEvent.rest
-                  : TrainingEvent.work;
+              final action = type == WorkoutType.doing
+                  ? WorkoutEvent.rest
+                  : WorkoutEvent.work;
               add(action());
             },
           );
@@ -99,26 +99,26 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
 
   Stream<Duration> get time => _timer.time;
 
-  void _start(Emitter<TrainingState> emitter) {
-    emitter(TrainingState.running(
+  void _start(Emitter<WorkoutState> emitter) {
+    emitter(WorkoutState.running(
       currentSet: 1,
       currentRound: 1,
-      type: TrainingType.doing,
+      type: WorkoutType.doing,
     ));
     _timer.setTime(settings.timeWork);
     _timer.start();
   }
 
-  void _finish(Emitter<TrainingState> emitter) {
-    emitter(const TrainingState.finished());
+  void _finish(Emitter<WorkoutState> emitter) {
+    emitter(const WorkoutState.finished());
     _timer.stop();
     _timer.setTime(settings.timeWork);
   }
 
-  void _pause(Emitter<TrainingState> emitter) {
+  void _pause(Emitter<WorkoutState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        emitter(TrainingState.paused(
+        emitter(WorkoutState.paused(
           currentSet: currentSet,
           currentRound: currentRound,
           type: type,
@@ -129,10 +129,10 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
     );
   }
 
-  void _continue(Emitter<TrainingState> emitter) {
+  void _continue(Emitter<WorkoutState> emitter) {
     state.maybeWhen(
       paused: (currentSet, currentRound, type) {
-        emitter(TrainingState.running(
+        emitter(WorkoutState.running(
           currentSet: currentSet,
           currentRound: currentRound,
           type: type,
@@ -143,22 +143,22 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
     );
   }
 
-  void _rest(Emitter<TrainingState> emitter) {
+  void _rest(Emitter<WorkoutState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
         final isLastRound = currentRound == settings.countRounds;
         final isLastSet = currentSet == settings.countSets;
-        final isFinishTraining = isLastRound && isLastSet;
+        final isFinishWorkout = isLastRound && isLastSet;
 
-        if (isFinishTraining) {
-          emitter(const TrainingState.finished());
+        if (isFinishWorkout) {
+          emitter(const WorkoutState.finished());
           return;
         }
 
-        emitter(TrainingState.running(
+        emitter(WorkoutState.running(
           currentSet: currentSet,
           currentRound: currentRound,
-          type: TrainingType.resting,
+          type: WorkoutType.resting,
         ));
 
         _timer.setTime(settings.timeRest);
@@ -168,7 +168,7 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
     );
   }
 
-  void _work(Emitter<TrainingState> emitter) {
+  void _work(Emitter<WorkoutState> emitter) {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
         final isLastSet = currentSet == settings.countSets;
@@ -176,10 +176,10 @@ class TrainingBloc extends Bloc<TrainingEvent, TrainingState> {
         final set = isLastSet ? 1 : ++currentSet;
         final round = isLastSet ? ++currentRound : currentRound;
 
-        emitter(TrainingState.running(
+        emitter(WorkoutState.running(
           currentSet: set,
           currentRound: round,
-          type: TrainingType.doing,
+          type: WorkoutType.doing,
         ));
         _timer.setTime(settings.timeWork);
         _timer.restart();
