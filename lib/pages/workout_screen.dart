@@ -16,6 +16,7 @@ class WorkoutScreen extends StatelessWidget {
   }
 }
 
+// TODO: split page on states widgets
 class _Content extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,6 @@ class _Content extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
-            const SizedBox(height: 20),
             BlocBuilder<WorkoutBloc, WorkoutState>(
               builder: (context, state) {
                 return state.maybeMap(
@@ -49,7 +49,7 @@ class _Content extends StatelessWidget {
                       final label = state.maybeMap(
                         running: (value) => value.type.name,
                         paused: (value) => value.type.name,
-                        orElse: () => 'Start training',
+                        orElse: () => "You've done the workout",
                       );
                       return Text(
                         label,
@@ -66,7 +66,7 @@ class _Content extends StatelessWidget {
                       final value = snap.data ?? const Duration();
 
                       return Text(
-                        value.inSeconds.toString(),
+                        (value.inSeconds + 1).toString(),
                         style: const TextStyle(
                           fontSize: 48,
                         ),
@@ -87,13 +87,27 @@ class _Content extends StatelessWidget {
                           icon: Icons.play_arrow,
                           onTap: () => bloc.add(const WorkoutEvent.proceed()),
                         ),
-                        orElse: () => _TimerButton(
-                          icon: Icons.play_arrow,
-                          onTap: () => bloc.add(const WorkoutEvent.start()),
+                        orElse: () => const SizedBox(height: 64),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 60),
+                  BlocBuilder<WorkoutBloc, WorkoutState>(
+                    builder: (context, state) {
+                      return state.maybeMap(
+                        finished: (_) => Button(
+                          'Back',
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        orElse: () => Button(
+                          'Finish',
+                          onPressed: () => context
+                              .read<WorkoutBloc>()
+                              .add(const WorkoutEvent.finish()),
                         ),
                       );
                     },
-                  )
+                  ),
                 ],
               ),
             )

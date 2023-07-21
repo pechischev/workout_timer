@@ -44,6 +44,9 @@ dependencies:
   freezed_annotation: 2.4.1
   json_annotation: 4.8.1
 
+  #form
+  reactive_forms: 15.0.0
+
   # ui
   cupertino_icons: 1.0.2
 

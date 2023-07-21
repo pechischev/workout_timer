@@ -95,6 +95,8 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
         }
       },
     );
+
+    add(const WorkoutEvent.start());
   }
 
   Stream<Duration> get time => _timer.time;
