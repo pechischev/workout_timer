@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_train_clock/state/settings/settings.dart';
-import 'package:my_train_clock/state/training/training.dart';
+import 'package:my_train_clock/state/state.dart';
 import 'package:my_train_clock/ui/widgets.dart';
 
 class TrainingScreen extends StatelessWidget {

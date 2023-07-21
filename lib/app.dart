@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'state/settings/settings.dart';
+import 'state/state.dart';
 import 'pages/training_screen.dart';
 
 class App extends StatelessWidget {
@@ -20,7 +20,7 @@ class _App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My Train Timer',
+      title: 'Workout Timer',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
