@@ -50,6 +50,7 @@ dependencies:
 
   # ui
   cupertino_icons: 1.0.2
+  percent_indicator: 4.0.1
 
   # other
   rxdart: 0.27.7

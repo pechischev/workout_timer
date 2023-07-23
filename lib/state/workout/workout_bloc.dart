@@ -32,7 +32,7 @@ class WorkoutEvent with _$WorkoutEvent {
 
 enum WorkoutType {
   resting('Rest'),
-  doing('Work');
+  doing('Go');
 
   const WorkoutType(this.name);
 
@@ -52,14 +52,6 @@ class WorkoutState with _$WorkoutState {
     required int currentRound,
     @Default(WorkoutType.doing) WorkoutType type,
   }) = _RunningState;
-
-  @Assert('currentSet > 0')
-  @Assert('currentRound > 0')
-  factory WorkoutState.paused({
-    required int currentSet,
-    required int currentRound,
-    required WorkoutType type,
-  }) = _PausedState;
 
   const factory WorkoutState.finished() = _FinishedState;
 }
@@ -104,6 +96,8 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
 
   Stream<Duration> get time => _timer.time;
 
+  Stream<WatchTimerState> get timerState => _timer.state;
+
   Future<void> _start(_StartEvent event, Emitter<WorkoutState> emitter) async {
     emitter(WorkoutState.running(
       currentSet: 1,
@@ -115,7 +109,9 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   }
 
   Future<void> _finish(
-      _FinishEvent event, Emitter<WorkoutState> emitter) async {
+    _FinishEvent event,
+    Emitter<WorkoutState> emitter,
+  ) async {
     emitter(const WorkoutState.finished());
     _timer.stop();
     _timer.setTime(settings.timeWork);
@@ -124,11 +120,6 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   Future<void> _pause(_PauseEvent event, Emitter<WorkoutState> emitter) async {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        emitter(WorkoutState.paused(
-          currentSet: currentSet,
-          currentRound: currentRound,
-          type: type,
-        ));
         _timer.pause();
       },
       orElse: () {},
@@ -136,14 +127,11 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   }
 
   Future<void> _continue(
-      _ProceedEvent event, Emitter<WorkoutState> emitter) async {
+    _ProceedEvent event,
+    Emitter<WorkoutState> emitter,
+  ) async {
     state.maybeWhen(
-      paused: (currentSet, currentRound, type) {
-        emitter(WorkoutState.running(
-          currentSet: currentSet,
-          currentRound: currentRound,
-          type: type,
-        ));
+      running: (currentSet, currentRound, type) {
         _timer.start();
       },
       orElse: () {},

@@ -4,6 +4,12 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 
+enum WatchTimerState {
+  running,
+  paused,
+  stopped,
+}
+
 class WatchTimer {
   final Function(Duration)? onChange;
   final VoidCallback? onStop;
@@ -16,6 +22,8 @@ class WatchTimer {
   final PublishSubject<Duration> _elapsedTime = PublishSubject<Duration>();
   final BehaviorSubject<Duration> _timeController =
       BehaviorSubject<Duration>.seeded(const Duration());
+  final BehaviorSubject<WatchTimerState> _stateController =
+      BehaviorSubject<WatchTimerState>.seeded(WatchTimerState.stopped);
 
   WatchTimer({
     Duration time = const Duration(),
@@ -33,8 +41,9 @@ class WatchTimer {
   }
 
   ValueStream<Duration> get time => _timeController;
+  ValueStream<WatchTimerState> get state => _stateController;
 
-  bool get isRunning => _timer != null && _timer!.isActive;
+  bool get _isRunning => _timer != null && _timer!.isActive;
 
   Duration get _currentTime =>
       Duration(milliseconds: DateTime.now().millisecondsSinceEpoch);
@@ -44,7 +53,7 @@ class WatchTimer {
   }
 
   void start() {
-    if (!isRunning) {
+    if (!_isRunning) {
       _startTime = _currentTime;
       _timer = Timer.periodic(const Duration(milliseconds: 1), (Timer timer) {
         final passedTime = _currentTime - _startTime + _stopTime;
@@ -57,21 +66,23 @@ class WatchTimer {
           stop();
         }
       });
+      _stateController.add(WatchTimerState.running);
     }
   }
 
   void pause() {
-    if (!isRunning) {
+    if (!_isRunning) {
       return;
     }
 
     _timer!.cancel();
     _timer = null;
     _stopTime = _currentTime - _startTime;
+    _stateController.add(WatchTimerState.paused);
   }
 
   void stop() {
-    if (!isRunning) {
+    if (!_isRunning) {
       return;
     }
 
@@ -84,10 +95,11 @@ class WatchTimer {
 
     _startTime = const Duration();
     _stopTime = const Duration();
+    _stateController.add(WatchTimerState.stopped);
   }
 
   void restart() {
-    if (isRunning) {
+    if (_isRunning) {
       stop();
     }
 
@@ -109,6 +121,7 @@ class WatchTimer {
     await Future.wait<void>([
       _elapsedTime.close(),
       _timeController.close(),
+      _stateController.close(),
     ]);
   }
 }

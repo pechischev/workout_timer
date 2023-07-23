@@ -7,7 +7,10 @@ enum TextSize {
   s18,
   s20,
   s24,
+  s28,
+  s32,
   s40,
+  s48,
 }
 
 enum TextWeight {
@@ -66,7 +69,10 @@ extension TextSizeExt on TextSize {
       TextSize.s18: 18.0,
       TextSize.s20: 20.0,
       TextSize.s24: 24.0,
+      TextSize.s28: 28.0,
+      TextSize.s32: 32.0,
       TextSize.s40: 40.0,
+      TextSize.s48: 48.0,
     };
 
     return sizes[this] ?? 16.0;
