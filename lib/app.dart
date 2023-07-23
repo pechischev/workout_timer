@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_train_clock/pages/welcome_screen.dart';
+import 'package:workout_timer/pages/welcome_screen.dart';
 
 import 'helpers/themes.dart';
 import 'state/state.dart';

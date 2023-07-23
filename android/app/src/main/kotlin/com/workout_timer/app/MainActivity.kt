@@ -1,4 +1,4 @@
-package com.mytrainclock.app.my_train_clock
+package com.workout_timer.app
 
 import io.flutter.embedding.android.FlutterActivity
 

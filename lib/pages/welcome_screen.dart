@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_train_clock/state/state.dart';
-import 'package:my_train_clock/ui/widgets.dart';
+import 'package:workout_timer/state/state.dart';
+import 'package:workout_timer/ui/widgets.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 class WelcomeScreen extends StatelessWidget {

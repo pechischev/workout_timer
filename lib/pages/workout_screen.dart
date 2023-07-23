@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:my_train_clock/helpers/timer.dart';
-import 'package:my_train_clock/state/state.dart';
-import 'package:my_train_clock/ui/widgets.dart';
+import 'package:workout_timer/helpers/timer.dart';
+import 'package:workout_timer/state/state.dart';
+import 'package:workout_timer/ui/widgets.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class WorkoutScreen extends StatelessWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'package:my_train_clock/state/state.dart';
-import 'package:my_train_clock/helpers/timer.dart';
+import 'package:workout_timer/state/state.dart';
+import 'package:workout_timer/helpers/timer.dart';
 import 'package:vibration/vibration.dart';
 
 part 'workout_bloc.freezed.dart';

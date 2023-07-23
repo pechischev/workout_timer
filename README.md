@@ -1,4 +1,4 @@
-# my_train_clock
+# Workout Timer
 
 A new Flutter project.
 
