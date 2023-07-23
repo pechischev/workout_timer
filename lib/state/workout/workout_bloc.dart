@@ -57,6 +57,7 @@ class WorkoutState with _$WorkoutState {
 }
 
 const delayBetweenRunningState = Duration(seconds: 2);
+const delayStartingState = Duration(seconds: 4);
 
 class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   late final WatchTimer _timer;
@@ -104,6 +105,11 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
       currentRound: 1,
       type: WorkoutType.doing,
     ));
+
+    await _announceStart();
+
+    await Future.delayed(delayStartingState);
+
     _timer.setTime(settings.timeWork);
     _timer.start();
   }
@@ -200,6 +206,18 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
     // wait 250ms, vibrate 500ms, wait 250ms, vibrate 500ms)
     Vibration.vibrate(pattern: [250, 500, 250, 500]);
   }
+
+  Future<void> _announceStart() async {
+    final hasVibrator = (await Vibration.hasVibrator()) ?? false;
+
+    if (!hasVibrator) {
+      return;
+    }
+
+    // wait 250ms, vibrate 500ms, wait 250ms, vibrate 500ms)
+    Vibration.vibrate(pattern: [1000, 500, 250, 500, 250, 500]);
+  }
+
 
   @override
   Future<void> close() {
