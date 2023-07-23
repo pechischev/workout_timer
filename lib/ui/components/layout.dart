@@ -15,7 +15,6 @@ class Layout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: appbar,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,

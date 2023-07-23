@@ -35,6 +35,7 @@ dependencies:
   # native
   flutter_native_splash: 2.2.18
   path_provider: 2.0.13
+  vibration: 1.8.1
 
   # state
   bloc: 8.1.1
@@ -44,8 +45,12 @@ dependencies:
   freezed_annotation: 2.4.1
   json_annotation: 4.8.1
 
+  #form
+  reactive_forms: 15.0.0
+
   # ui
   cupertino_icons: 1.0.2
+  percent_indicator: 4.0.1
 
   # other
   rxdart: 0.27.7
