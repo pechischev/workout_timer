@@ -66,7 +66,7 @@ class _Content extends StatelessWidget {
                       final value = snap.data ?? const Duration();
 
                       return Text(
-                        (value.inSeconds + 1).toString(),
+                        value.inSeconds.toString(),
                         style: const TextStyle(
                           fontSize: 48,
                         ),

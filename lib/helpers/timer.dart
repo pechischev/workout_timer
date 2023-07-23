@@ -84,7 +84,6 @@ class WatchTimer {
 
     _startTime = const Duration();
     _stopTime = const Duration();
-    _elapsedTime.add(_time);
   }
 
   void restart() {
