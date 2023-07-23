@@ -113,7 +113,11 @@ class _SettingsContentSheet extends StatelessWidget {
                     const TextInputType.numberWithOptions(decimal: true),
               ),
               const SizedBox(height: 48),
-              Button('Save', onPressed: () => _save(context, formGroup)),
+              Button(
+                'Save',
+                onPressed: () => _save(context, formGroup),
+                type: ButtonType.filled,
+              ),
             ],
           );
         },

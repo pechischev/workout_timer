@@ -16,8 +16,6 @@ class CustomNavigationBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
       elevation: 0,
       title: Text(
         title ?? '',

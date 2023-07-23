@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_train_clock/pages/welcome_screen.dart';
 
+import 'helpers/themes.dart';
 import 'state/state.dart';
 import 'pages/workout_screen.dart';
 
@@ -22,10 +23,7 @@ class _App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Workout Timer',
-      theme: ThemeData(
-        primaryColor: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: lightTheme,
       initialRoute: '/',
       routes: {
         '/': (context) => const WelcomeScreen(),
