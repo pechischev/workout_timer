@@ -50,6 +50,7 @@ class WatchTimer {
 
   void setTime(Duration time) {
     _time = time;
+    _elapsedTime.add(time);
   }
 
   void start() {
@@ -107,21 +108,14 @@ class WatchTimer {
   }
 
   Future<void> dispose() async {
-    if (_elapsedTime.isClosed) {
-      throw Exception(
-        'This instance is already disposed. Please re-create WatchTimer instance.',
-      );
-    }
-
-    final timer = _timer;
-    if (timer != null && timer.isActive) {
-      timer.cancel();
+    if (_isRunning) {
+      _timer!.cancel();
     }
 
     await Future.wait<void>([
-      _elapsedTime.close(),
       _timeController.close(),
       _stateController.close(),
+      _elapsedTime.close(),
     ]);
   }
 }

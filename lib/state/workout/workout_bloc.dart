@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:workout_timer/state/state.dart';
 import 'package:workout_timer/helpers/timer.dart';
-import 'package:vibration/vibration.dart';
+
+import 'workout_timer.dart';
 
 part 'workout_bloc.freezed.dart';
 
@@ -56,11 +59,8 @@ class WorkoutState with _$WorkoutState {
   const factory WorkoutState.finished() = _FinishedState;
 }
 
-const delayBetweenRunningState = Duration(seconds: 2);
-const delayStartingState = Duration(seconds: 4);
-
 class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
-  late final WatchTimer _timer;
+  late final WorkoutTimer _timer;
 
   final SettingsData settings;
 
@@ -72,32 +72,42 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
     on<_RestEvent>(_rest);
     on<_WorkEvent>(_work);
 
-    _timer = WatchTimer(
-      time: settings.timeWork,
-      onStop: () {
-        final shouldChangeState = state.maybeWhen(
-          running: (_, __, ___) => true,
-          orElse: () => false,
-        );
-        if (shouldChangeState) {
-          state.whenOrNull(
-            running: (_, __, type) {
-              final action = type == WorkoutType.doing
-                  ? WorkoutEvent.rest
-                  : WorkoutEvent.work;
-              add(action());
-            },
-          );
-        }
-      },
+    var timer = DefaultWorkoutDecorator(
+      WorkoutTimerImpl(
+        onStop: _changeRunningState,
+      ),
     );
 
-    add(const WorkoutEvent.start());
+    // TODO: set flag for switching type
+    timer = VibrationDecorator(timer);
+
+    _timer = timer;
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      add(const WorkoutEvent.start());
+    });
   }
 
   Stream<Duration> get time => _timer.time;
 
-  Stream<WatchTimerState> get timerState => _timer.state;
+  Stream<WatchTimerState> get timerState => _timer.timerState;
+
+  void _changeRunningState() {
+    final shouldChangeState = state.maybeWhen(
+      running: (_, __, ___) => true,
+      orElse: () => false,
+    );
+    if (shouldChangeState) {
+      state.whenOrNull(
+        running: (_, __, type) {
+          final action = type == WorkoutType.doing
+              ? WorkoutEvent.rest
+              : WorkoutEvent.work;
+          add(action());
+        },
+      );
+    }
+  }
 
   Future<void> _start(_StartEvent event, Emitter<WorkoutState> emitter) async {
     emitter(WorkoutState.running(
@@ -106,12 +116,7 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
       type: WorkoutType.doing,
     ));
 
-    await _announceStart();
-
-    await Future.delayed(delayStartingState);
-
-    _timer.setTime(settings.timeWork);
-    _timer.start();
+    _timer.run(settings.timeWork);
   }
 
   Future<void> _finish(
@@ -120,7 +125,6 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   ) async {
     emitter(const WorkoutState.finished());
     _timer.stop();
-    _timer.setTime(settings.timeWork);
   }
 
   Future<void> _pause(_PauseEvent event, Emitter<WorkoutState> emitter) async {
@@ -138,7 +142,7 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   ) async {
     state.maybeWhen(
       running: (currentSet, currentRound, type) {
-        _timer.start();
+        _timer.proceed();
       },
       orElse: () {},
     );
@@ -147,10 +151,6 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   Future<void> _rest(_RestEvent event, Emitter<WorkoutState> emitter) async {
     await state.maybeWhen(
       running: (currentSet, currentRound, type) async {
-        await _announceStateChange();
-
-        await Future.delayed(delayBetweenRunningState);
-
         final isLastRound = currentRound == settings.countRounds;
         final isLastSet = currentSet == settings.countSets;
         final isFinishWorkout = isLastRound && isLastSet;
@@ -165,8 +165,7 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
           currentRound: currentRound,
           type: WorkoutType.resting,
         ));
-        _timer.setTime(settings.timeRest);
-        _timer.restart();
+        _timer.run(settings.timeRest);
       },
       orElse: () async {},
     );
@@ -175,10 +174,6 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   Future<void> _work(_WorkEvent event, Emitter<WorkoutState> emitter) async {
     await state.maybeWhen(
       running: (currentSet, currentRound, type) async {
-        await _announceStateChange();
-
-        await Future.delayed(delayBetweenRunningState);
-
         final isLastSet = currentSet == settings.countSets;
 
         final set = isLastSet ? 1 : ++currentSet;
@@ -189,35 +184,11 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
           currentRound: round,
           type: WorkoutType.doing,
         ));
-        _timer.setTime(settings.timeWork);
-        _timer.restart();
+        _timer.run(settings.timeWork);
       },
       orElse: () async {},
     );
   }
-
-  Future<void> _announceStateChange() async {
-    final hasVibrator = (await Vibration.hasVibrator()) ?? false;
-
-    if (!hasVibrator) {
-      return;
-    }
-
-    // wait 250ms, vibrate 500ms, wait 250ms, vibrate 500ms)
-    Vibration.vibrate(pattern: [250, 500, 250, 500]);
-  }
-
-  Future<void> _announceStart() async {
-    final hasVibrator = (await Vibration.hasVibrator()) ?? false;
-
-    if (!hasVibrator) {
-      return;
-    }
-
-    // wait 250ms, vibrate 500ms, wait 250ms, vibrate 500ms)
-    Vibration.vibrate(pattern: [1000, 500, 250, 500, 250, 500]);
-  }
-
 
   @override
   Future<void> close() {
