@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:vibration/vibration.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:workout_timer/helpers/timer.dart';
+
+import 'workout_bloc.dart';
 
 abstract class WorkoutTimer {
   void pause();
@@ -9,7 +12,7 @@ abstract class WorkoutTimer {
 
   void stop();
 
-  void run(Duration time);
+  void run(Duration time, WorkoutType type);
 
   void dispose();
 
@@ -21,8 +24,8 @@ abstract class WorkoutTimer {
 class WorkoutTimerImpl implements WorkoutTimer {
   late WatchTimer _timer;
 
-  final delayForRun = const Duration(seconds: 4);
-  final delayForStop = const Duration(seconds: 2);
+  final delayForRun = const Duration(seconds: 1);
+  final delayForStop = const Duration(seconds: 1);
 
   WorkoutTimerImpl({VoidCallback? onStop}) {
     _timer = WatchTimer(onStop: onStop);
@@ -39,7 +42,7 @@ class WorkoutTimerImpl implements WorkoutTimer {
   }
 
   @override
-  void run(Duration time) {
+  void run(Duration time, WorkoutType type) {
     _timer.setTime(time);
     Future.delayed(delayForRun, () => _timer.restart());
   }
@@ -77,8 +80,8 @@ class DefaultWorkoutDecorator extends WorkoutTimer {
   }
 
   @override
-  void run(Duration time) {
-    _wrappee.run(time);
+  void run(Duration time, WorkoutType type) {
+    _wrappee.run(time, type);
   }
 
   @override
@@ -102,9 +105,9 @@ class VibrationDecorator extends DefaultWorkoutDecorator {
   VibrationDecorator(super.instance);
 
   @override
-  void run(Duration time) async {
+  void run(Duration time, WorkoutType type) async {
     await _vibrate();
-    super.run(time);
+    super.run(time, type);
   }
 
   @override
@@ -126,6 +129,41 @@ class VibrationDecorator extends DefaultWorkoutDecorator {
   @override
   void dispose() {
     Vibration.cancel();
+    super.dispose();
+  }
+}
+
+class AudioDecorator extends DefaultWorkoutDecorator {
+  late final AudioPlayer startingPlayer;
+  late final AudioPlayer stoppingPlayer;
+
+  AudioDecorator(super.instance) {
+    startingPlayer = AudioPlayer()..setAsset('assets/start.mp3');
+    stoppingPlayer = AudioPlayer()..setAsset('assets/stop.mp3');
+  }
+
+  @override
+  void run(Duration time, WorkoutType type) async {
+    final player = type == WorkoutType.doing ? startingPlayer : stoppingPlayer;
+
+    await player.seek(const Duration());
+    await player.play();
+    super.run(time, type);
+    player.pause();
+  }
+
+  @override
+  void stop() async {
+    await stoppingPlayer.seek(const Duration());
+    await stoppingPlayer.play();
+    super.stop();
+    stoppingPlayer.pause();
+  }
+
+  @override
+  void dispose() {
+    startingPlayer.dispose();
+    stoppingPlayer.dispose();
     super.dispose();
   }
 }

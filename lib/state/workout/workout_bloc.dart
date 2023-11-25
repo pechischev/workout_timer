@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -79,7 +78,8 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
     );
 
     // TODO: set flag for switching type
-    timer = VibrationDecorator(timer);
+    // timer = VibrationDecorator(timer);
+    timer = AudioDecorator(timer);
 
     _timer = timer;
 
@@ -110,13 +110,14 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
   }
 
   Future<void> _start(_StartEvent event, Emitter<WorkoutState> emitter) async {
+    const type = WorkoutType.doing;
     emitter(WorkoutState.running(
       currentSet: 1,
       currentRound: 1,
-      type: WorkoutType.doing,
+      type: type,
     ));
 
-    _timer.run(settings.timeWork);
+    _timer.run(settings.timeWork, type);
   }
 
   Future<void> _finish(
@@ -160,12 +161,14 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
           return;
         }
 
+        const nextType = WorkoutType.resting;
+
         emitter(WorkoutState.running(
           currentSet: currentSet,
           currentRound: currentRound,
-          type: WorkoutType.resting,
+          type: nextType,
         ));
-        _timer.run(settings.timeRest);
+        _timer.run(settings.timeRest, nextType);
       },
       orElse: () async {},
     );
@@ -179,12 +182,14 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
         final set = isLastSet ? 1 : ++currentSet;
         final round = isLastSet ? ++currentRound : currentRound;
 
+        const nextType = WorkoutType.doing;
+
         emitter(WorkoutState.running(
           currentSet: set,
           currentRound: round,
-          type: WorkoutType.doing,
+          type: nextType,
         ));
-        _timer.run(settings.timeWork);
+        _timer.run(settings.timeWork, nextType);
       },
       orElse: () async {},
     );
